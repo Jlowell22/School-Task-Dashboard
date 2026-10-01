@@ -1,6 +1,6 @@
 # School Tasks: turning school noise into a parent's to-do list
 
-**[Live demo →](https://YOUR-USERNAME.github.io/school-task-dashboard/)** (runs on fictional sample data)
+**[Live demo →](https://Jlowell22.github.io/school-task-dashboard/)** (runs on fictional sample data)
 
 ![Dashboard screenshot](docs/screenshot.png)
 
