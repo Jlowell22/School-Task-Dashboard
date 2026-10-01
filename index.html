@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>School Tasks</title>
+<meta name="description" content="A daily school-to-parent task list synthesized from email and ParentSquare by an AI agent.">
+</head>
+<body>
+<style>
+:root{
+  --bg:#f6f5f1;--surface:#ffffff;--ink:#1d1f22;--muted:#5d6168;--line:#e3e1da;
+  --accent:#1f5f8b;--accent-soft:#e6eff6;--done:#2f6f4f;--warn:#a2461c;--chip:#efede6;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141518;--surface:#1d1f23;--ink:#ecebe6;--muted:#a3a7ae;--line:#2e3137;
+  --accent:#7db4dc;--accent-soft:#1f2c37;--done:#7fc2a0;--warn:#f0a07a;--chip:#2a2c31;}}
+:root[data-theme="dark"]{
+  --bg:#141518;--surface:#1d1f23;--ink:#ecebe6;--muted:#a3a7ae;--line:#2e3137;
+  --accent:#7db4dc;--accent-soft:#1f2c37;--done:#7fc2a0;--warn:#f0a07a;--chip:#2a2c31;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:32px 16px 64px}
+header h1{font:600 30px/1.2 Georgia,"Times New Roman",serif;margin:0 0 4px}
+header p{margin:0;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:24px}
+.card h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:600}
+.summary-text{margin:0;white-space:pre-line}
+.summary-list{margin:12px 0 0;padding-left:20px}
+.summary-list li{margin:4px 0}
+.meta{font-size:13px;color:var(--muted);margin-top:12px}
+.group{margin-top:20px}
+.group:first-of-type{margin-top:0}
+.group h3{font-size:15px;margin:0 0 8px;font-weight:600}
+.group h3.overdue{color:var(--warn)}
+ul.tasks{list-style:none;margin:0;padding:0}
+li.task{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+li.task:first-child{border-top:0}
+.check{flex:none;width:44px;height:44px;margin:-8px -6px -8px -10px;display:grid;place-items:center;background:none;border:0;cursor:pointer;color:var(--accent);border-radius:8px}
+.check:hover{background:var(--accent-soft)}
+.check:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.check svg{width:24px;height:24px}
+.body{flex:1;min-width:0}
+.title{font-weight:600}
+.detail{color:var(--muted);font-size:14px;margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--chip);color:var(--muted)}
+.chip.due{background:var(--accent-soft);color:var(--accent)}
+.add{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;padding-bottom:20px;margin-bottom:20px;border-bottom:1px solid var(--line)}
+.field{display:flex;flex-direction:column;gap:4px}
+.field.grow{flex:1 1 240px}
+.field.full{flex-basis:100%}
+.field label{font-size:13px;color:var(--muted);font-weight:600}
+.field input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px}
+.field input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.addBtn{font:inherit;font-weight:600;color:#fff;background:var(--accent);border:0;border-radius:8px;padding:0 20px;min-height:44px;cursor:pointer}
+:root[data-theme="dark"] .addBtn{color:#10161b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .addBtn{color:#10161b}}
+.addBtn:disabled{opacity:.6;cursor:default}
+.del{flex:none;width:44px;height:44px;margin:-8px -10px -8px 0;display:grid;place-items:center;background:none;border:0;cursor:pointer;color:var(--muted);border-radius:8px}
+.del:hover{background:var(--chip);color:var(--warn)}
+.del svg{width:18px;height:18px}
+.links{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:6px}
+.links a{color:var(--accent);font-size:14px;font-weight:600;text-decoration:none;padding:4px 0}
+.links a:hover{text-decoration:underline}
+.archive li.task .title{text-decoration:line-through;color:var(--muted);font-weight:500}
+.archive .check{color:var(--done)}
+.empty{color:var(--muted);margin:0}
+details summary{cursor:pointer;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;list-style:none;min-height:24px}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"▸ ";}
+details[open] summary::before{content:"▾ ";}
+details[open] summary{margin-bottom:12px}
+.demo{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;background:var(--accent-soft);color:var(--ink);border-radius:12px;padding:12px 16px;margin-top:20px;font-size:14px}
+.demo button{font:inherit;font-size:14px;font-weight:600;color:var(--accent);background:none;border:1px solid var(--accent);border-radius:8px;padding:0 14px;min-height:44px;cursor:pointer}
+.status{font-size:14px;color:var(--warn);margin-top:16px}
+.past summary{font-size:14px;text-transform:none;letter-spacing:0;color:var(--accent);font-weight:500}
+.past .entry{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--line)}
+.past .entry strong{display:block;font-size:14px}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>School Tasks</h1>
+    <p id="weekLabel">This week</p>
+  </header>
+  <div class="demo" id="demoBar" hidden>
+    <span><strong>Demo mode.</strong> Sample data for a fictional school, saved only in this browser.</span>
+    <button type="button" id="resetDemo">Reset sample data</button>
+  </div>
+
+  <section class="card" aria-labelledby="sumH">
+    <h2 id="sumH">Today's update</h2>
+    <div id="summary"><p class="empty">The first summary will appear after the 5 pm update.</p></div>
+    <details class="past" id="pastWrap" hidden>
+      <summary>Earlier summaries</summary>
+      <div id="past"></div>
+    </details>
+  </section>
+
+  <section class="card" aria-labelledby="taskH">
+    <h2 id="taskH">To do</h2>
+    <form id="addForm" class="add" autocomplete="off">
+      <div class="field grow">
+        <label for="newTitle">New task</label>
+        <input id="newTitle" type="text" required maxlength="140" placeholder="e.g. Pack library book">
+      </div>
+      <div class="field">
+        <label for="newDue">Due (optional)</label>
+        <input id="newDue" type="date">
+      </div>
+      <div class="field grow full">
+        <label for="newDetail">Note (optional)</label>
+        <input id="newDetail" type="text" maxlength="300">
+      </div>
+      <button type="submit" class="addBtn">Add task</button>
+    </form>
+    <div id="open"><p class="empty">Loading tasks…</p></div>
+  </section>
+
+  <section class="card archive">
+    <details id="archWrap">
+      <summary id="archLabel">Archive</summary>
+      <div id="archive"><p class="empty">Completed tasks will show up here.</p></div>
+    </details>
+  </section>
+
+  <p class="status" id="status" hidden></p>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const iso = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const parse = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y,m-1,d); };
+  const fmtDay = s => parse(s).toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
+  const fmtShort = s => parse(s).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const mon = new Date(today); mon.setDate(today.getDate() - ((today.getDay()+6)%7));
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+  const todayS = iso(today), monS = iso(mon), sunS = iso(sun);
+  $("weekLabel").textContent = "Week of " + mon.toLocaleDateString(undefined,{month:"long",day:"numeric"}) + " – " + sun.toLocaleDateString(undefined,{month:"long",day:"numeric"});
+
+  const boxOpen = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/></svg>';
+  const boxDone = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>';
+
+  let db = null, tasks = [];
+
+  function linksHtml(links){
+    const ok = (links||[]).filter(l => l && /^https:\/\//i.test(l.url||""));
+    if (!ok.length) return "";
+    return '<div class="links">'+ok.map(l=>'<a href="'+esc(l.url)+'" target="_blank" rel="noopener noreferrer">'+esc(l.label||"Open link")+' <span aria-hidden="true">↗</span></a>').join("")+'</div>';
+  }
+  function taskLi(t, done){
+    const chips = [];
+    if (t.due) chips.push('<span class="chip due">Due '+esc(fmtShort(t.due))+'</span>');
+    (t.sources||[]).forEach(s => chips.push('<span class="chip">'+esc(s==="Me"?"Added by you":s)+'</span>'));
+    if (done && t.completedAt) chips.push('<span class="chip">Done '+esc(new Date(t.completedAt).toLocaleDateString(undefined,{month:"short",day:"numeric"}))+'</span>');
+    const label = done ? "Move back to To do: " : "Mark complete: ";
+    return '<li class="task"><button class="check" data-id="'+esc(t.id)+'" data-done="'+(done?1:0)+'" aria-label="'+esc(label+t.title)+'">'+(done?boxDone:boxOpen)+'</button>'+
+      '<div class="body"><div class="title">'+esc(t.title)+'</div>'+
+      (t.detail?'<div class="detail">'+esc(t.detail)+'</div>':'')+
+      linksHtml(t.links)+
+      '<div class="chips">'+chips.join("")+'</div></div>'+
+      ((t.sources||[]).includes("Me") ? '<button class="del" data-del="'+esc(t.id)+'" aria-label="'+esc("Delete task: "+t.title)+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' : '')+
+      '</li>';
+  }
+  function group(title, list, cls){
+    if (!list.length) return "";
+    return '<div class="group"><h3'+(cls?' class="'+cls+'"':'')+'>'+esc(title)+'</h3><ul class="tasks">'+list.map(t=>taskLi(t,false)).join("")+'</ul></div>';
+  }
+
+  function render(){
+    const open = tasks.filter(t => t.status !== "done");
+    const done = tasks.filter(t => t.status === "done").sort((a,b)=>(b.completedAt||"").localeCompare(a.completedAt||""));
+    const byDue = (a,b)=>(a.due||"").localeCompare(b.due||"") || (a.title||"").localeCompare(b.title||"");
+    open.sort(byDue);
+    let html = group("Overdue", open.filter(t=>t.due && t.due < todayS), "overdue");
+    for (let d = new Date(today); d <= sun; d.setDate(d.getDate()+1)){
+      const s = iso(d);
+      html += group((s===todayS?"Today · ":"") + fmtDay(s), open.filter(t=>t.due===s));
+    }
+    html += group("Coming up", open.filter(t=>t.due && t.due > sunS));
+    html += group("No due date", open.filter(t=>!t.due));
+    $("open").innerHTML = html || '<p class="empty">Nothing on your list. Nice.</p>';
+    $("archive").innerHTML = done.length ? '<ul class="tasks">'+done.map(t=>taskLi(t,true)).join("")+'</ul>' : '<p class="empty">Completed tasks will show up here.</p>';
+    $("archLabel").textContent = "Archive (" + done.length + ")";
+  }
+
+  function renderSummaries(list){
+    if (!list.length) return;
+    const [latest, ...rest] = list;
+    const block = s => (s.text?'<p class="summary-text">'+esc(s.text)+'</p>':'') +
+      (s.highlights && s.highlights.length ? '<ul class="summary-list">'+s.highlights.map(h=>'<li>'+esc(h)+'</li>').join("")+'</ul>' : '');
+    $("summary").innerHTML = block(latest) + '<p class="meta">Updated '+esc(fmtDay(latest.date))+' at 5 pm</p>';
+    $("sumH").textContent = latest.date === todayS ? "Today's update" : "Latest update";
+    if (rest.length){
+      $("pastWrap").hidden = false;
+      $("past").innerHTML = rest.map(s=>'<div class="entry"><strong>'+esc(fmtDay(s.date))+'</strong>'+block(s)+'</div>').join("");
+    }
+  }
+
+
+  // ---- Storage ---------------------------------------------------------
+  // Inside Claude, the page uses Claude's shared artifact database.
+  // Anywhere else (e.g. GitHub Pages) it falls back to a tiny localStorage
+  // store with the same interface, seeded with fictional sample data.
+  const KEY = "school-tasks-demo-v1";
+  function addDays(n){ const d=new Date(today); d.setDate(d.getDate()+n); return iso(d); }
+  function sampleData(){
+    const now = new Date().toISOString();
+    return {
+      tasks: {
+        "picture-day-form": {title:"Return picture day order form", detail:"Paper form or online order for Room 12. The form also covers yearbook orders.", due:addDays(1), sources:["Email","ParentSquare"], links:[{label:"Online order form",url:"https://example.com/picture-day"},{label:"ParentSquare post",url:"https://example.com/post/101"}], status:"open", completedAt:null, addedOn:addDays(-1)},
+        "field-trip-lunch": {title:"Pack a lunch from home for the field trip", detail:"Nature center trip, outside 11:45–2:00. Label the lunch and send sneakers.", due:addDays(2), sources:["ParentSquare"], links:[{label:"ParentSquare post",url:"https://example.com/post/102"}], status:"open", completedAt:null, addedOn:addDays(-1)},
+        "fun-run": {title:"PTO Fun Run", detail:"Students get a free T-shirt. Families welcome to cheer from the track.", due:addDays(9), sources:["Email","ParentSquare"], links:[{label:"ParentSquare post",url:"https://example.com/post/103"}], status:"open", completedAt:null, addedOn:addDays(-2)},
+        "tshirt-size": {title:"Submit Fun Run T-shirt size", detail:"One form per child.", due:addDays(-1), sources:["Email","ParentSquare"], links:[{label:"T-shirt size form",url:"https://example.com/tshirt"}], status:"done", completedAt:now, addedOn:addDays(-3)},
+        "math-test": {title:"Review for Unit 1 math test", detail:"Use the Home Connections packet: factors, multiples, word problems.", due:addDays(6), sources:["Email"], links:[], status:"open", completedAt:null, addedOn:addDays(-1)},
+        "me-library": {title:"Find the library book", detail:"Check under the couch.", due:null, sources:["Me"], links:[], status:"open", completedAt:null, addedOn:addDays(0)}
+      },
+      summaries: {
+        [addDays(0)]: {date:addDays(0), text:"Three new items from the school today. The picture day form is due tomorrow, and the field trip needs a packed lunch.", highlights:["Due tomorrow: picture day order form","Field trip: pack a labeled lunch and sneakers","PTO Fun Run is coming up next week","Math unit test is scheduled for next week"]},
+        [addDays(-1)]: {date:addDays(-1), text:"The principal shared the monthly lunch menu and a reminder about Fun Run T-shirt sizes.", highlights:["T-shirt size form due (merged from email + ParentSquare)"]}
+      }
+    };
+  }
+  function localDb(){
+    let state, subs = [];
+    const load = () => { try { state = JSON.parse(localStorage.getItem(KEY)); } catch(e){} if (!state) { state = sampleData(); save(); } };
+    const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} };
+    const emit = () => subs.forEach(fn => fn());
+    const snap = (coll, opts) => {
+      let docs = Object.entries(state[coll]||{}).map(([id,data]) => ({id, exists:true, data:()=>data}));
+      if (opts.order) docs.sort((a,b)=>{ const x=a.data()[opts.order.f]||"", y=b.data()[opts.order.f]||""; return opts.order.dir==="desc"? y.localeCompare(x) : x.localeCompare(y); });
+      if (opts.limit) docs = docs.slice(0, opts.limit);
+      return {docs, size:docs.length, empty:!docs.length};
+    };
+    const query = (coll, opts={}) => ({
+      orderBy:(f,dir)=>query(coll,{...opts,order:{f,dir}}),
+      limit:n=>query(coll,{...opts,limit:n}),
+      onSnapshot:(next)=>{ const fn=()=>next(snap(coll,opts)); subs.push(fn); fn(); return ()=>{subs=subs.filter(x=>x!==fn);}; }
+    });
+    const doc = path => { const [coll,id] = path.split("/"); return {
+      set: async d => { (state[coll] ||= {})[id] = d; save(); emit(); },
+      update: async d => { Object.assign(state[coll][id], d); save(); emit(); },
+      delete: async () => { delete state[coll][id]; save(); emit(); }
+    };};
+    load();
+    return { collection: c => query(c), doc,
+      reset: () => { state = sampleData(); save(); emit(); } };
+  }
+
+  function showStatus(msg){ const el=$("status"); el.textContent=msg; el.hidden=!msg; }
+
+  $("addForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    if (!db){ showStatus("Tasks can’t be saved in this view."); return; }
+    const title = $("newTitle").value.trim(); if (!title) return;
+    const btn = $("addForm").querySelector("button"); btn.disabled = true;
+    const id = "me-" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+    const doc = {key:id, title, detail:$("newDetail").value.trim(), due:$("newDue").value || null,
+      sources:["Me"], links:[], status:"open", completedAt:null, addedOn:todayS};
+    try { await db.doc("tasks/"+id).set(doc); $("addForm").reset(); showStatus(""); $("newTitle").focus(); }
+    catch(err){ showStatus("Couldn't add that task. Please try again."); }
+    btn.disabled = false;
+  });
+
+  document.addEventListener("click", async e => {
+    const del = e.target.closest("button.del");
+    if (del && db){
+      const t = tasks.find(x=>x.id===del.dataset.del);
+      if (t){
+        try { await db.doc("tasks/"+t.id).delete(); } catch(err){ showStatus("Couldn't delete that task."); }
+      }
+      return;
+    }
+    const btn = e.target.closest("button.check"); if (!btn || !db) return;
+    const id = btn.dataset.id, wasDone = btn.dataset.done === "1";
+    const t = tasks.find(x=>x.id===id); if (!t) return;
+    const patch = wasDone ? {status:"open", completedAt:null} : {status:"done", completedAt:new Date().toISOString()};
+    Object.assign(t, patch); render();
+    try { await db.doc("tasks/"+id).update(patch); showStatus(""); }
+    catch(err){ Object.assign(t, wasDone?{status:"done"}:{status:"open",completedAt:null}); render(); showStatus("Couldn't save that change. Please try again."); }
+  });
+
+  (async () => {
+    const inClaude = typeof window.claude !== "undefined" && typeof window.claude.use === "function";
+    db = inClaude ? await window.claude.use("db") : null;
+    if (!db){
+      db = localDb();
+      $("demoBar").hidden = false;
+      $("resetDemo").addEventListener("click", () => db.reset());
+    }
+    db.collection("tasks").onSnapshot(snap => {
+      tasks = snap.docs.map(d => Object.assign({id:d.id}, d.data()));
+      render();
+    }, () => showStatus("Lost connection to your task list. Reload to reconnect."));
+    db.collection("summaries").orderBy("date","desc").limit(14).onSnapshot(snap => {
+      renderSummaries(snap.docs.map(d=>d.data()));
+    }, () => {});
+  })();
+})();
+</script>
+
+</body>
+</html>
